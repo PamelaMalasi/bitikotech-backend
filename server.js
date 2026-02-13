@@ -21,7 +21,7 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "https://bitikotech-frontend.onrender.com",
     credentials: true,
   })
 );
@@ -48,5 +48,5 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 5003;
 app.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
+  console.log(`Backend running on port ${PORT}`);
 });

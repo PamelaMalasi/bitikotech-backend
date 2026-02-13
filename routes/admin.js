@@ -20,10 +20,13 @@ router.post("/login", (req, res) => {
     { expiresIn: "7d" }
   );
 
-  res.cookie("admin_token", token, {
-    httpOnly: true,
-    sameSite: "lax",
-  });
+ res.cookie("admin_token", token, {
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",
+});
+
+
 
   res.json({ success: true });
 });
@@ -43,8 +46,14 @@ router.get("/me", (req, res) => {
 
 // LOGOUT
 router.post("/logout", (req, res) => {
-  res.clearCookie("admin_token");
+  res.clearCookie("admin_token", {
+  secure: true,
+  sameSite: "none",
+});
+
   res.json({ success: true });
 });
+
+
 
 export default router;
