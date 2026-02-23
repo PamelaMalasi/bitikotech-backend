@@ -19,12 +19,24 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(
-  cors({
-    origin: "https://bitikotech-frontend.onrender.com",
-    credentials: true,
-  })
-);
+const allowedOrigins = [
+  "https://bitikotech-frontend.onrender.com",
+];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error("CORS blocked for origin: " + origin));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+
 
 // routes AFTER cors
 app.use("/admin", adminRoutes);
