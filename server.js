@@ -9,7 +9,11 @@ import projectRoutes from "./routes/project.js";
 import contactRoutes from "./routes/contact.js";
 import path from "path";
 
+import fs from "fs";
 
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
 
 
 dotenv.config();

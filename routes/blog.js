@@ -18,9 +18,10 @@ router.post("/", requireAdmin, upload.single("image"), async (req, res) => {
     });
 
     res.json(blog);
-  } catch (err) {
-    res.status(400).json({ message: "Failed to create blog" });
-  }
+ } catch (err) {
+  console.log("CREATE BLOG ERROR:", err);
+  res.status(500).json({ message: err.message || "Failed to create blog" });
+}
 });
 
 // GET all blogs (public)
