@@ -25,6 +25,7 @@ app.use(cookieParser());
 
 const allowedOrigins = [
   "https://bitikotech-frontend.onrender.com",
+  "https://bitikotech.com",
 ];
 
 const corsOptions = {
