@@ -8,13 +8,11 @@ import blogRoutes from "./routes/blog.js";
 import projectRoutes from "./routes/project.js";
 import contactRoutes from "./routes/contact.js";
 import path from "path";
-
 import fs from "fs";
 
 if (!fs.existsSync("uploads")) {
   fs.mkdirSync("uploads");
 }
-
 
 dotenv.config();
 
@@ -41,19 +39,13 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
-
-// routes AFTER cors
 app.use("/admin", adminRoutes);
 app.use("/blog", blogRoutes);
 app.use("/project", projectRoutes);
 app.use("/contact", contactRoutes);
-app.use("/uploads", express.static("uploads"));
 
-
-
-
-// connect MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
