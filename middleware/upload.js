@@ -1,17 +1,29 @@
 import multer from "multer";
-import path from "path";
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads"),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
-  },
-});
+/**
+ * Use memory storage so files are NOT saved to disk.
+ * The file will be available as req.file.buffer
+ * and will be uploaded directly to Cloudinary.
+ */
+const storage = multer.memoryStorage();
 
+/**
+ * Allow only image uploads
+ */
 const fileFilter = (req, file, cb) => {
-  const ok = ["image/jpeg", "image/png", "image/webp"].includes(file.mimetype);
-  cb(ok ? null : new Error("Only images allowed"), ok);
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only JPEG, PNG, and WEBP images are allowed"), false);
+  }
 };
 
-export const upload = multer({ storage, fileFilter });
+/**
+ * Multer upload middleware
+ */
+export const upload = multer({
+  storage,
+  fileFilter,
+});
