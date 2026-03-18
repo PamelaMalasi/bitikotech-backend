@@ -44,7 +44,7 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use("/admin", adminRoutes);
 app.use("/blog", blogRoutes);
 app.use("/project", projectRoutes);
-app.use("/contact", contactRoutes);
+app.use("/api/contact", contactRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI)
