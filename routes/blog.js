@@ -6,25 +6,28 @@ import cloudinary from "../config/cloudinary.js";
 
 const router = express.Router();
 
-// CREATE blog (admin only, with image)
+function calcReadTime(text = "") {
+  return Math.max(1, Math.ceil(text.split(/\s+/).length / 200));
+}
+
+async function uploadToCloudinary(buffer) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: "bitikotech-blogs" },
+      (error, result) => (error ? reject(error) : resolve(result))
+    );
+    stream.end(buffer);
+  });
+}
+
+// CREATE blog (admin only)
 router.post("/", requireAdmin, upload.single("image"), async (req, res) => {
   try {
-    const { title, excerpt, content } = req.body;
+    const { title, excerpt, content, category, author } = req.body;
+
     let imageUrl = "";
-
     if (req.file) {
-      const result = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: "bitikotech-blogs" },
-          (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-          }
-        );
-
-        stream.end(req.file.buffer);
-      });
-
+      const result = await uploadToCloudinary(req.file.buffer);
       imageUrl = result.secure_url;
     }
 
@@ -33,6 +36,9 @@ router.post("/", requireAdmin, upload.single("image"), async (req, res) => {
       excerpt,
       content,
       image: imageUrl,
+      category: category || "Marketing",
+      author: author || "Bitiko Team",
+      readTime: calcReadTime(content),
     });
 
     res.json(blog);
@@ -42,23 +48,15 @@ router.post("/", requireAdmin, upload.single("image"), async (req, res) => {
   }
 });
 
-// GET all blogs (public)
+// GET all blogs (public) — supports ?category= filter
 router.get("/", async (req, res) => {
   try {
-    const blogs = await Blog.find().sort({ createdAt: -1 });
+    const filter = {};
+    if (req.query.category) filter.category = req.query.category;
+    const blogs = await Blog.find(filter).sort({ createdAt: -1 });
     res.json(blogs);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch blogs" });
-  }
-});
-
-// DELETE blog (admin only)
-router.delete("/:id", requireAdmin, async (req, res) => {
-  try {
-    await Blog.findByIdAndDelete(req.params.id);
-    res.json({ success: true });
-  } catch {
-    res.status(400).json({ message: "Delete failed" });
   }
 });
 
@@ -73,41 +71,43 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// UPDATE blog (admin only, optional new image)
+// UPDATE blog (admin only)
 router.put("/:id", requireAdmin, upload.single("image"), async (req, res) => {
   try {
+    const { title, excerpt, content, category, author } = req.body;
+
     const updateData = {
-      title: req.body.title,
-      excerpt: req.body.excerpt,
-      content: req.body.content,
+      title,
+      excerpt,
+      content,
+      category,
+      author,
+      readTime: calcReadTime(content),
     };
 
     if (req.file) {
-      const result = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: "bitikotech-blogs" },
-          (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-          }
-        );
-
-        stream.end(req.file.buffer);
-      });
-
+      const result = await uploadToCloudinary(req.file.buffer);
       updateData.image = result.secure_url;
     }
 
-    const updated = await Blog.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true }
-    );
+    const updated = await Blog.findByIdAndUpdate(req.params.id, updateData, {
+      new: true,
+    });
 
     res.json(updated);
   } catch (err) {
     console.log("UPDATE BLOG ERROR:", err);
     res.status(400).json({ message: err.message || "Update failed" });
+  }
+});
+
+// DELETE blog (admin only)
+router.delete("/:id", requireAdmin, async (req, res) => {
+  try {
+    await Blog.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch {
+    res.status(400).json({ message: "Delete failed" });
   }
 });
 
