@@ -16,7 +16,10 @@ const ProjectSchema = new mongoose.Schema(
       required: true,
     },
     link: {
-      type: String, // optional external link (e.g. live site)
+      type: String,
+    },
+    pdf: {
+      type: String, // Cloudinary URL for the project PDF
     },
   },
   {
