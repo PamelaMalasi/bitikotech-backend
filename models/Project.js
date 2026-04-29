@@ -18,8 +18,8 @@ const ProjectSchema = new mongoose.Schema(
     link: {
       type: String,
     },
-    pdf: {
-      type: String, // Cloudinary URL for the project PDF
+    screenshot: {
+      type: String, // second image shown only on the project detail page
     },
   },
   {

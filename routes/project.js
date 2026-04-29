@@ -7,14 +7,15 @@ import { upload } from "../middleware/upload.js";
 const router = express.Router();
 
 const multiUpload = upload.fields([
-  { name: "image", maxCount: 1 },
-  { name: "pdf",   maxCount: 1 },
+  { name: "image",      maxCount: 1 },
+  { name: "screenshot", maxCount: 1 },
 ]);
 
-async function uploadToCloudinary(buffer, options = {}) {
+async function uploadToCloudinary(buffer, folder) {
   return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(options, (error, result) =>
-      error ? reject(error) : resolve(result)
+    const stream = cloudinary.uploader.upload_stream(
+      { folder },
+      (error, result) => (error ? reject(error) : resolve(result))
     );
     stream.end(buffer);
   });
@@ -25,30 +26,23 @@ router.post("/", requireAdmin, multiUpload, async (req, res) => {
   try {
     const { title, description, link } = req.body;
 
-    let imageUrl = "";
-    let pdfUrl   = "";
+    let imageUrl      = "";
+    let screenshotUrl = "";
 
     if (req.files?.image?.[0]) {
-      const result = await uploadToCloudinary(req.files.image[0].buffer, {
-        folder: "bitikotech-projects",
-      });
-      imageUrl = result.secure_url;
+      const r = await uploadToCloudinary(req.files.image[0].buffer, "bitikotech-projects");
+      imageUrl = r.secure_url;
     }
 
-    if (req.files?.pdf?.[0]) {
-      const result = await uploadToCloudinary(req.files.pdf[0].buffer, {
-        folder: "bitikotech-projects-pdf",
-        resource_type: "raw",
-      });
-      pdfUrl = result.secure_url;
+    if (req.files?.screenshot?.[0]) {
+      const r = await uploadToCloudinary(req.files.screenshot[0].buffer, "bitikotech-projects");
+      screenshotUrl = r.secure_url;
     }
 
     const project = await Project.create({
-      title,
-      description,
-      link,
+      title, description, link,
       image: imageUrl,
-      pdf: pdfUrl,
+      screenshot: screenshotUrl,
     });
 
     res.json(project);
@@ -89,24 +83,16 @@ router.put("/:id", requireAdmin, multiUpload, async (req, res) => {
     };
 
     if (req.files?.image?.[0]) {
-      const result = await uploadToCloudinary(req.files.image[0].buffer, {
-        folder: "bitikotech-projects",
-      });
-      updateData.image = result.secure_url;
+      const r = await uploadToCloudinary(req.files.image[0].buffer, "bitikotech-projects");
+      updateData.image = r.secure_url;
     }
 
-    if (req.files?.pdf?.[0]) {
-      const result = await uploadToCloudinary(req.files.pdf[0].buffer, {
-        folder: "bitikotech-projects-pdf",
-        resource_type: "raw",
-      });
-      updateData.pdf = result.secure_url;
+    if (req.files?.screenshot?.[0]) {
+      const r = await uploadToCloudinary(req.files.screenshot[0].buffer, "bitikotech-projects");
+      updateData.screenshot = r.secure_url;
     }
 
-    const updated = await Project.findByIdAndUpdate(req.params.id, updateData, {
-      new: true,
-    });
-
+    const updated = await Project.findByIdAndUpdate(req.params.id, updateData, { new: true });
     res.json(updated);
   } catch (error) {
     console.error("Update failed:", error);
