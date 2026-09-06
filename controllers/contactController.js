@@ -1,6 +1,14 @@
 import Contact from "../models/Contact.js";
 import { Resend } from "resend";
 
+function esc(str = "") {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const createContactMessage = async (req, res) => {
@@ -54,27 +62,27 @@ export const createContactMessage = async (req, res) => {
 
     await resend.emails.send({
       from: "onboarding@resend.dev",
-      to: "pammalasi@outlook.com",
+      to: process.env.ADMIN_EMAIL,
       subject:
         formType === "consultation"
           ? "New Consultation Request"
           : "New Contact Form Submission",
       html: `
-        <h3>New ${formType} submission</h3>
-        <p><b>Name:</b> ${name}</p>
-        <p><b>Email:</b> ${email}</p>
+        <h3>New ${esc(formType)} submission</h3>
+        <p><b>Name:</b> ${esc(name)}</p>
+        <p><b>Email:</b> ${esc(email)}</p>
         ${
           formType === "consultation"
             ? `
-              <p><b>Consultation Type:</b> ${consultationType || ""}</p>
-              <p><b>Company:</b> ${company || ""}</p>
-              <p><b>Phone:</b> ${phone || ""}</p>
-              <p><b>Preferred Date:</b> ${preferredDate || ""}</p>
-              <p><b>Project Details:</b> ${projectDetails || ""}</p>
+              <p><b>Consultation Type:</b> ${esc(consultationType)}</p>
+              <p><b>Company:</b> ${esc(company)}</p>
+              <p><b>Phone:</b> ${esc(phone)}</p>
+              <p><b>Preferred Date:</b> ${esc(preferredDate)}</p>
+              <p><b>Project Details:</b> ${esc(projectDetails)}</p>
             `
             : `
-              <p><b>Subject:</b> ${subject || ""}</p>
-              <p><b>Message:</b> ${message || ""}</p>
+              <p><b>Subject:</b> ${esc(subject)}</p>
+              <p><b>Message:</b> ${esc(message)}</p>
             `
         }
       `,
